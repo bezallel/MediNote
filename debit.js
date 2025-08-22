@@ -764,22 +764,35 @@ async function downloadAllAsPDF() {
   }
 }
 
+
+
 async function exportNoteToPDF(noteEl, supplierName) {
   const { jsPDF } = window.jspdf;
 
-  // Clone into fixed-width wrapper for consistent layout
+  // Clone into fixed-width wrapper
   const wrapper = document.createElement('div');
   wrapper.style.position = 'fixed';
   wrapper.style.left = '-9999px';
   wrapper.style.top = '0';
   wrapper.style.width = '794px'; // ~A4 width at 96dpi
   wrapper.style.background = '#fff';
-  wrapper.appendChild(noteEl.cloneNode(true));
+
+  // Clone the note
+  const clone = noteEl.cloneNode(true);
+
+  // --- SHRINK TABLE TO FIT ---
+  const table = clone.querySelector('.note-table');
+  if (table) {
+    table.style.transformOrigin = 'top left';
+    table.style.transform = 'scale(0.97)'; // scale down table slightly
+    table.style.display = 'inline-block';
+  }
+
+  wrapper.appendChild(clone);
   document.body.appendChild(wrapper);
 
-  // High resolution render
   const canvas = await html2canvas(wrapper, {
-    scale: 3,   // higher = sharper
+    scale: 3,
     useCORS: true,
   });
   document.body.removeChild(wrapper);
@@ -787,32 +800,36 @@ async function exportNoteToPDF(noteEl, supplierName) {
   const imgData = canvas.toDataURL('image/png');
   const pdf = new jsPDF('p', 'mm', 'a4');
 
+  // --- ADD PDF HEADING ---
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('TRIPLE E - DEBIT NOTE', pdf.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-
   const imgProps = pdf.getImageProperties(imgData);
-  const pdfWidth = pageWidth;
+
+  const margin = 10;
+  const usableWidth = pageWidth - margin * 2;
+
+  const pdfWidth = usableWidth;
   const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
   let heightLeft = pdfHeight;
-  let position = 0;
+  let position = 25; // start below heading
 
-  // Add first page
-  pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-  heightLeft -= pageHeight;
+  pdf.addImage(imgData, 'PNG', margin, position, pdfWidth, pdfHeight);
+  heightLeft -= pageHeight - position;
 
-  // Add extra pages if needed
   while (heightLeft > 0) {
     position = heightLeft - pdfHeight;
     pdf.addPage();
-    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+    pdf.addImage(imgData, 'PNG', margin, position, pdfWidth, pdfHeight);
     heightLeft -= pageHeight;
   }
 
   pdf.save(`DebitNote_${supplierName}.pdf`);
 }
-
-
 
 })();
 
