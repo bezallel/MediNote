@@ -125,38 +125,110 @@
     }
   }
 
+  // function buildHeaderMap(rawHeaders) {
+  //   const map = {};
+  //   const tryFind = (candidates) => {
+  //     for (const h of rawHeaders) {
+  //       const n = normalizeKey(h);
+  //       for (const cand of candidates) {
+  //         if (n.includes(cand)) return h;
+  //       }
+  //     }
+  //     return null;
+  //   };
+
+  //   map.month = tryFind(['month']);
+  //   map.state = tryFind(['state']);
+  //   map.supplier = tryFind(['supplier','suppliername']);
+  //   map.item = tryFind(['item','description','product']);
+  //   map.unitRate = tryFind(['unitrate','finalplannedrate','unit']);
+  //   map.plannedUnits = tryFind(['plannedunits','plannedunit']);
+  //   map.plannedAmount = tryFind(['plannedamount','plannedamountvated','planned']);
+  //   map.invoicedUnits = tryFind(['invoicedunits','invoicedunit']);
+  //   map.invoicedUnitRate = tryFind(['invoicedunitrate','invoicedrate']);
+  //   map.invAmount = tryFind(['invamount','invamountvated','invoicedamount','invoiceamount']);
+  //   map.invoiceNo = tryFind(['invoiceno','invno','invnumber']);
+  //   map.receivedUnits = tryFind(['receivedunits','receivedunit']);
+  //   map.receivedAmount = tryFind(['receivedunitsamount','receivedamount']);
+  //   map.unitsPayable = tryFind(['unitspayable','payableunits']);
+  //   map.actualPayable = tryFind(['actualpayable','actualpayableamount']);
+  //   map.debitNote = tryFind(['debitnote','debit']);
+  //   map.remarks = tryFind(['remarks','remark']);
+
+  //   return map;
+  // }
+
+
   function buildHeaderMap(rawHeaders) {
-    const map = {};
-    const tryFind = (candidates) => {
-      for (const h of rawHeaders) {
-        const n = normalizeKey(h);
-        for (const cand of candidates) {
-          if (n.includes(cand)) return h;
-        }
-      }
-      return null;
-    };
+  // Pre-normalize headers once
+  const norm = rawHeaders.map(h => ({ raw: h, n: normalizeKey(h) }));
 
-    map.month = tryFind(['month']);
-    map.state = tryFind(['state']);
-    map.supplier = tryFind(['supplier','suppliername']);
-    map.item = tryFind(['item','description','product']);
-    map.unitRate = tryFind(['unitrate','finalplannedrate','unit']);
-    map.plannedUnits = tryFind(['plannedunits','plannedunit']);
-    map.plannedAmount = tryFind(['plannedamount','plannedamountvated','planned']);
-    map.invoicedUnits = tryFind(['invoicedunits','invoicedunit']);
-    map.invoicedUnitRate = tryFind(['invoicedunitrate','invoicedrate']);
-    map.invAmount = tryFind(['invamount','invamountvated','invoicedamount','invoiceamount']);
-    map.invoiceNo = tryFind(['invoiceno','invno','invnumber']);
-    map.receivedUnits = tryFind(['receivedunits','receivedunit']);
-    map.receivedAmount = tryFind(['receivedunitsamount','receivedamount']);
-    map.unitsPayable = tryFind(['unitspayable','payableunits']);
-    map.actualPayable = tryFind(['actualpayable','actualpayableamount']);
-    map.debitNote = tryFind(['debitnote','debit']);
-    map.remarks = tryFind(['remarks','remark']);
+  // Prefer exact -> startsWith -> includes, and prioritize candidate order
+  const pick = (cands) => {
+    const cs = cands.map(c => normalizeKey(c));
 
-    return map;
-  }
+    // exact
+    for (const c of cs) {
+      const hit = norm.find(h => h.n === c);
+      if (hit) return hit.raw;
+    }
+    // startsWith
+    for (const c of cs) {
+      const hit = norm.find(h => h.n.startsWith(c));
+      if (hit) return hit.raw;
+    }
+    // includes
+    for (const c of cs) {
+      const hit = norm.find(h => h.n.includes(c));
+      if (hit) return hit.raw;
+    }
+    return null;
+  };
+
+  const map = {};
+  map.month            = pick(['month']);
+  map.state            = pick(['state']);
+  map.supplier         = pick(['supplier','suppliername']);
+  map.item             = pick(['item','description','product']);
+
+  // IMPORTANT: remove generic 'unit' so it doesn't match Planned Units, etc.
+  map.unitRate         = pick(['final planned rate (vated)','final planned rate','unit rate','rate']);
+
+  map.plannedUnits     = pick(['planned units','plannedunit','planned qty','plannedquantity']);
+
+  // IMPORTANT: remove generic 'planned' so it can't hit "Final Planned rate"
+  map.plannedAmount    = pick([
+    'planned amount (vated)',
+    'planned amount',
+    'plannedamountvated',
+    'plannedamount'
+  ]);
+
+  map.invoicedUnits    = pick(['invoiced units','invoicedunit']);
+  map.invoicedUnitRate = pick(['invoiced unit rate (vated)','invoiced unit rate','invoicedunitrate','invoicedrate']);
+
+  map.invAmount        = pick([
+    'inv amount (vated)',
+    'inv amount',
+    'invoiced amount (vated)',
+    'invoiced amount',
+    'invoice amount',
+    'invamountvated',
+    'invamount'
+  ]);
+
+  map.invoiceNo        = pick(['invoice no','invoiceno','invno','inv number','invnumber']);
+  map.receivedUnits    = pick(['received units','receivedunit']);
+  map.receivedAmount   = pick(['received units amount (vated)','received units amount','receivedamount']);
+  map.unitsPayable     = pick(['units payable','unitspayable','payable units','payableunits']);
+  map.actualPayable    = pick(['actual payable amount','actual payable amount (₦)','actualpayableamount','actualpayable']);
+  map.debitNote        = pick(['debit note','debitnote','debit']);
+  map.remarks          = pick(['remarks','remark']);
+
+  return map;
+}
+
+
 
   function normalizeRows(rowsRaw, map) {
     return rowsRaw.map(r => {
@@ -369,14 +441,111 @@ function generateForSupplier(supplierName) {
 
   }
 
-  function createDebitNoteHTML(supObj) {
+//   function createDebitNoteHTML(supObj) {
+//   const items = supObj.items;
+//   const totalPlanned = items.reduce((s,i) => s + parseNumber(i.plannedAmount), 0);
+//   const totalActual = items.reduce((s,i) => s + parseNumber(i.actualPayable), 0);
+//   const totalDebit = items.reduce((s,i) => s + parseNumber(i.debitAmount), 0);
+
+//   const reasons = Array.from(new Set(items.map(it => it.remarks || '').filter(Boolean)));
+//   const reasonsText = reasons.length ? reasons.join('; ') : 'Not specified';
+
+//   const rowsHtml = items.map(it => `
+//     <tr>
+//       <td>${escapeHtml(it.item || '')}</td>
+//       <td>${escapeHtml(it.invoiceNo || '')}</td>
+//       <td>${escapeHtml(it.plannedUnits || '')}</td>
+//       <td>${formatCurrency(parseNumber(it.plannedAmount))}</td>
+//       <td>${escapeHtml(it.invoicedUnits || '')}</td>
+//       <td>${formatCurrency(parseNumber(it.invAmount))}</td>
+//       <td>${escapeHtml(it.receivedUnits || '')}</td>
+//       <td>${formatCurrency(parseNumber(it.actualPayable))}</td>
+//       <td>${formatCurrency(parseNumber(it.debitAmount))}</td>
+//     </tr>
+//   `).join('\n');
+
+//   const month = items.map(i => i.month).find(Boolean) || '';
+//   const addressLine = `Dear ${escapeHtml(supObj.name)},`;
+
+//   const html = `
+//     <div style="font-size:14px;color:#222;">
+//       <div style="margin-bottom:12px;">
+//         <div style="font-weight:700;"></div>
+//         <div style="color:#666;font-size:13px;">Invoice Month: ${escapeHtml(month)} &nbsp; | &nbsp; Supplier State: ${escapeHtml(supObj.state)}</div>
+//       </div>
+
+//       <p style="margin:8px 0 6px 0">${addressLine}</p>
+
+//       <p style="margin:6px 0;">
+//         This is to notify you that a <strong>Debit Note of ${formatCurrency(totalDebit)}</strong> is being issued to your account in relation to supplies listed below.
+//         The total planned amount across these deliveries was <strong>${formatCurrency(totalPlanned)}</strong>, while the actual payable amount recorded is <strong>${formatCurrency(totalActual)}</strong>.
+//         The resulting shortfall (debit) is <strong>${formatCurrency(totalDebit)}</strong>.
+//       </p>
+
+//       <p style="margin:6px 0;"><strong>Reason(s):</strong> ${escapeHtml(reasonsText)}</p>
+
+//       <!-- table wrapper ensures mobile horizontal scroll instead of overflow -->
+//       <div class="table-wrapper" style="width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:12px;padding-bottom:6px;">
+//         <table class="note-table" style="width:100%;border-collapse:collapse;font-size:13px;min-width:0;">
+//           <thead>
+//             <tr>
+//               <th style="white-space:nowrap">Item</th>
+//               <th style="white-space:nowrap">Invoice No</th>
+//               <th style="white-space:nowrap">Planned Units</th>
+//               <th style="white-space:nowrap">Planned Amount</th>
+//               <th style="white-space:nowrap">Invoiced Units</th>
+//               <th style="white-space:nowrap">Invoiced Amount</th>
+//               <th style="white-space:nowrap">Received Units</th>
+//               <th style="white-space:nowrap">Actual Payable</th>
+//               <th style="white-space:nowrap">Debit Amount</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             ${rowsHtml}
+//             <tr style="font-weight:700;">
+//               <td colspan="3" style="text-align:left;">Totals</td>
+//               <td>${formatCurrency(totalPlanned)}</td>
+//               <td></td>
+//               <td></td>
+//               <td></td>
+//               <td>${formatCurrency(totalActual)}</td>
+//               <td>${formatCurrency(totalDebit)}</td>
+//             </tr>
+//           </tbody>
+//         </table>
+//       </div>
+
+//       <p style="margin:12px 0 6px 0;">
+//         Please adjust your account and provide confirmation. If you disagree with the values shown here, contact accounts immediately with supporting documentation.
+//       </p>
+
+//       <p style="margin:6px 0;">Regards,<br><strong>Procurement / Accounts</strong></p>
+//     </div>
+//   `;
+//   return html;
+// }
+
+
+
+function createDebitNoteHTML(supObj) {
   const items = supObj.items;
+
   const totalPlanned = items.reduce((s,i) => s + parseNumber(i.plannedAmount), 0);
   const totalActual = items.reduce((s,i) => s + parseNumber(i.actualPayable), 0);
-  const totalDebit = items.reduce((s,i) => s + parseNumber(i.debitAmount), 0);
+  const totalDebit  = items.reduce((s,i) => s + parseNumber(i.debitAmount), 0);
+
+  // NEW: totals for invoiced units and amount
+  const totalInvoicedUnits  = items.reduce((s,i) => s + parseNumber(i.invoicedUnits), 0);
+  const totalInvoicedAmount = items.reduce((s,i) => s + parseNumber(i.invAmount), 0);
 
   const reasons = Array.from(new Set(items.map(it => it.remarks || '').filter(Boolean)));
   const reasonsText = reasons.length ? reasons.join('; ') : 'Not specified';
+
+  // helper just for displaying units nicely
+  const fmtUnits = (n) => {
+    const v = Number(n) || 0;
+    try { return v.toLocaleString(); } catch { return String(v); }
+  };
 
   const rowsHtml = items.map(it => `
     <tr>
@@ -407,7 +576,14 @@ function generateForSupplier(supplierName) {
       <p style="margin:6px 0;">
         This is to notify you that a <strong>Debit Note of ${formatCurrency(totalDebit)}</strong> is being issued to your account in relation to supplies listed below.
         The total planned amount across these deliveries was <strong>${formatCurrency(totalPlanned)}</strong>, while the actual payable amount recorded is <strong>${formatCurrency(totalActual)}</strong>.
-        The resulting shortfall (debit) is <strong>${formatCurrency(totalDebit)}</strong>.
+      </p>
+
+      <!-- NEW: invoiced explanation -->
+      <p style="margin:6px 0;">
+        You invoiced <strong>${fmtUnits(totalInvoicedUnits)} unit(s)</strong> for a total of
+        <strong>${formatCurrency(totalInvoicedAmount)}</strong>. After reconciliation, the approved payable is
+        <strong>${formatCurrency(totalActual)}</strong>. The difference results in a debit of
+        <strong>${formatCurrency(totalDebit)}</strong>.
       </p>
 
       <p style="margin:6px 0;"><strong>Reason(s):</strong> ${escapeHtml(reasonsText)}</p>
@@ -434,7 +610,7 @@ function generateForSupplier(supplierName) {
               <td colspan="3" style="text-align:left;">Totals</td>
               <td>${formatCurrency(totalPlanned)}</td>
               <td></td>
-              <td></td>
+              <td>${formatCurrency(totalInvoicedAmount)}</td>
               <td></td>
               <td>${formatCurrency(totalActual)}</td>
               <td>${formatCurrency(totalDebit)}</td>
@@ -452,6 +628,7 @@ function generateForSupplier(supplierName) {
   `;
   return html;
 }
+
 
 function wrapStandaloneHtml(innerHtml) {
   const inlineCSS = `
