@@ -1,0 +1,19 @@
+﻿Month,State,Supplier,Item,Unit rate,Vol disc,Add 1,Add 2,Ag disc,Final Planned rate (vated),Planned Units,Planned Amount (vated), Invoiced Units,Invoiced Unit rate (vated),Inv Amount (vated),Invoice No,Received Units,Received Units Amount (vated),Bonus Units,Bonus Units Amount (Vated),Units Payable,Actual payable amount (₦),Compliance,Debit Note,REMARKS
+March'24,IBADAN,Splendex,Anesthesia machines,14500,0.35,0,0,0.15,8411.8125,16,134589,16,8411.8125," 134,589 ",1063,22," 185,060 ",0,0,16," 134,589 ",100%, -   ,OK
+March'24,IBADAN,Splendex,Anesthesia machines,10500,0.35,0,0,0.15,6091.3125,8,48730.5,12,9000," 108,000 ",1061,8," 48,731 ",0,0,8," 48,731 ",67%," 59,270 ",Supplier Overcharged
+March'24,IBADAN,Bron-Di,ECG Machine,4200,0.3,0,0,0.15,2623.95,100,262395,100,2623.95," 262,395 ",3924,210," 551,030 ",0,0,100," 262,395 ",100%, -   ,OK
+March'24,IBADAN,Bron-Di,ECG Machine,11450,0.35,0,0,0.15,6642.43125,24,159418.35,24,6642.43125," 159,418 ",53,47," 312,194 ",0,0,24," 159,418 ",100%, -   ,OK
+March'24,OSUN,Relevex,Defibrillator,5500,0.3,0,0,0.15,3436.125,100,343612.5,100,7200," 720,000 ",428,75," 257,709 ",0,0,75," 257,709 ",75%," 462,291 ",Supplier Overcharged
+March'24,OSUN,Relevex,Defibrillator,5500,0.3,0,0,0.15,3436.125,85,292070.625,85,5000," 425,000 ",428,85," 292,071 ",0,0,85," 292,071 ",100%," 132,929 ",Supplier Overcharged
+March'24,BENIN,Barometer,Wheelchair,11450,0.35,0,0,0.15,6642.43125,27,179345.6438,27,6642.43125," 179,346 ",55,44," 292,267 ",0,0,27," 179,346 ",100%, -   ,OK
+March'24,PORTHARCOURT,Medcare Xplus,Gurney,11450,0.35,0,0,0.15,6642.43125,24,159418.35,24,6642.43125," 159,418 ",52,39," 259,055 ",0,0,24," 159,418 ",100%, -   ,OK
+March'24,DELTA,Helio,CT Scan,4000,0.3,0,0,0.15,2499,90,224910,90,2499," 224,910 ",146,60," 149,940 ",0,0,60," 149,940 ",67%," 74,970 ",Supplier Overcharged
+March'24,DELTA,Helio,CT Scan,4000,0.3,0,0,0.15,2499,85,212415,85,2499," 212,415 ",146,90," 224,910 ",0,0,85," 212,415 ",100%, -   ,OK
+March'24,UYO,Comfort ,ICU Beds,3300,0.3,0,0,0.15,2061.675,80,164934,80,2061.675," 164,934 ",CDI/100,120," 247,401 ",0,0,80," 164,934 ",100%, -   ,OK
+March'24,UYO,Comfort ,ICU Beds,3300,0.3,0,0,0.15,2061.675,80,164934,80,2061.675," 164,934 ",CDI/100,80," 164,934 ",0,0,80," 164,934 ",100%, -   ,OK
+March'24,OWERRI,Orient ,Surgical Microscopes,16000,0.35,0,0,0.15,9282,8,74256,8,9282," 74,256 ",7,21," 194,922 ",0,0,8," 74,256 ",100%, -   ,OK
+March'24,KADUNA,Capital,Operation Table,6200,0.35,0,0,0.15,3596.775,80,287742,80,3596.775," 287,742 ",4084,99," 356,081 ",0,0,80," 287,742 ",100%, -   ,OK
+March'24,KADUNA,Capital,Operation Table,15000,0.35,0,0,0.15,8701.875,8,69615,8,12304," 98,432 ",40,15," 130,528 ",0,0,8," 69,615 ",100%," 28,817 ",Supplier Overcharged
+March'24,SOKOTO,Rima ,Operation Lamps,11450,0.35,0,0,0.15,6642.43125,24,159418.35,50,6642.43125," 332,122 ",57,55," 365,334 ",0,0,24," 159,418 ",48%," 172,703 ",Supplier Overcharged
+March'24,BAUCHI,Medi-Ward,Oxygen Concetrators,3622.5,0.3,0,0,0.15,2263.156875,80,181052.55,80,2263.156875," 181,053 ",MEDI 052,80," 181,053 ",0,0,80," 181,053 ",100%, -   ,OK
+March'24,BAUCHI,Medi-Ward,Oxygen Concetrators,3622.5,0.3,0,0,0.15,2263.156875,85,192368.3344,85,2263.156875," 192,368 ",MEDI 052,85," 192,368 ",0,0,85," 192,368 ",100%, -   ,OK
